@@ -31,7 +31,7 @@ def Demux(inp, sel):
 
 
 #################################################
-# Multi-bit versions of some of the above gates #
+# Multi-bit versions of some of the basic gates #
 #################################################
 
 def Not16(inp):
@@ -157,5 +157,36 @@ def Mux8Way16(a, b, c, d, e, f, g, h, sel):
 
     return Mux16(abc_or_d, efg_or_h, sel2)
 
-def Demux4Way()
-    pass
+def Demux4Way(inp, sel):
+    sel0 = sel[1]
+    sel1 = sel[0]
+
+    y, z = Demux(inp, sel0)
+
+    a = And(Not(sel1), y)
+    b = And(Not(sel1), z)
+    c = And(sel1, y)
+    d = And(sel1, z)
+
+    return a, b, c, d
+
+def Demux8Way(inp, sel):
+    sel0 = sel[2]
+    sel1 = sel[1]
+    sel2 = sel[0]
+
+    q, r = Demux(inp, sel0)
+
+    w, x, y, z = Demux4Way(inp, (sel1, sel0))
+
+    a = And(Not(sel2), w)
+    b = And(Not(sel2), x)
+    c = And(Not(sel2), y)
+    d = And(Not(sel2), z)
+    e = And(sel2, w)
+    f = And(sel2, x)
+    g = And(sel2, y)
+    h = And(sel2, z)
+
+    return a, b, c, d, e, f, g, h
+    
