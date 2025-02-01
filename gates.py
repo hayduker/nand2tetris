@@ -6,6 +6,10 @@ def Nand(a, b):
     return 0 if a == 1 and b == 1 else 1
 
 
+####################################
+# Now we implement the basic gates #
+####################################
+
 def Not(a):
     return Nand(a, a)
 
