@@ -38,6 +38,17 @@ def DMux(inp, sel):
 
 ##########################################################
 # Multi-bit versions of some of the basic gates
+#
+# It would be easy to implement these gates using Python
+# lists, but that goes against the intention here. We want
+# to build progressively more complex gates using only
+# those gates we've defined already, in a way that will
+# emulate the nand2tetris HDL which describes simply the
+# physical interconnections of gates. This isn't meant to
+# be efficient, it's meant to show how one can build a
+# computer from first principles... we want to show how
+# to *achieve* the high-level abstraction that is a Python
+# list from such low-level parts.
 ##########################################################
 
 def Not16(inp):
