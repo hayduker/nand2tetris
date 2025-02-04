@@ -19,7 +19,7 @@ def And(a, b):
     return Not(Nand(a, b))
 
 def Or(a, b):
-    return Not(And(Not(a), Not(b)))
+    return Nand(Not(a), Not(b))
 
 def Xor(a, b):
     return Or(And(a, Not(b)),
@@ -29,7 +29,7 @@ def Mux(a, b, sel):
     return Or(And(Not(sel), a),
               And(sel, b))
 
-def Demux(inp, sel):
+def DMux(inp, sel):
     a = And(Xor(inp, sel),
             Not(sel))
     b = And(inp, sel)
@@ -163,11 +163,11 @@ def Mux8Way16(a, b, c, d, e, f, g, h, sel):
 
     return Mux16(abc_or_d, efg_or_h, sel2)
 
-def Demux4Way(inp, sel):
+def DMux4Way(inp, sel):
     sel0 = sel[1]
     sel1 = sel[0]
 
-    y, z = Demux(inp, sel0)
+    y, z = DMux(inp, sel0)
 
     a = And(Not(sel1), y)
     b = And(Not(sel1), z)
@@ -176,14 +176,14 @@ def Demux4Way(inp, sel):
 
     return a, b, c, d
 
-def Demux8Way(inp, sel):
+def DMux8Way(inp, sel):
     sel0 = sel[2]
     sel1 = sel[1]
     sel2 = sel[0]
 
-    q, r = Demux(inp, sel0)
+    q, r = DMux(inp, sel0)
 
-    w, x, y, z = Demux4Way(inp, (sel1, sel0))
+    w, x, y, z = DMux4Way(inp, (sel1, sel0))
 
     a = And(Not(sel2), w)
     b = And(Not(sel2), x)
@@ -260,3 +260,148 @@ def ALU(x, y, zx, nx, zy, ny, f, no):
     ng = out[0]
 
     return out, zr, ng
+
+
+
+##########################################################
+# Up to now, all of the gates we've defined have been
+# stateless (i.e. time-independent), and this is why they
+# can be represented in a purely-functional manner. We now
+# begin defining sequential logic gates, those which carry
+# state and thus whose outputs depend not only on their
+# inputs at the current time but also on those inputs
+# which came previously.
+#
+# Purely-functional programming becomes inconvenient here,
+# so these sequential logic gates are defined using Python
+# classes which define an "eval" method for simulating
+# running the chips with a given set of inputs. The eval
+# methods take the place of the functional definitions
+# above and attempt to resemble the nand2tetris HDL in
+# in that the only operations made available are calls to
+# previously-defined gates and naming the outputs of those
+# calls. In a sense, this code (and definitely the HDL on
+# which it is based) is simply supposed to enumerate how
+# chips are connected to each other physically.
+#
+# At some point it may be nice to rewrite the above gates
+# as classes as well. This would give all the gates the
+# same "structure" in the Python code and would make it
+# easier to write unit tests other tooling for the
+# hardware simulation. Care must be taken here though not
+# to mix up the HDL-like specification with this tooling
+# code, as it would be all-too-easy to start using higher-
+# level abstractions where we should only be using gates
+# we've previously defined connected to one another.
+##########################################################
+
+class DFF:
+    def __init__(self):
+        self.q = 0
+    
+    def eval(self, inp):
+        last_q = self.q
+        self.q = inp
+        return last_q
+
+
+class Bit:
+    def __init__(self):
+        self.dff = DFF()
+    
+    def eval(self, inp, load):
+        # Not sure how else to implement hardware feedback in code
+        # This is sort of cheating, because we look at the output
+        # of the DFF before running eval() on it.
+        which = Mux(self.dff.q, inp, load)
+        return self.dff.eval(which)
+
+    def __str__(self):
+        return str(self.dff.q)
+    
+    def __repr__(self):
+        return str(self)
+
+
+class Register:
+    def __init__(self):
+        self.bit0  = Bit()
+        self.bit1  = Bit()
+        self.bit2  = Bit()
+        self.bit3  = Bit()
+        self.bit4  = Bit()
+        self.bit5  = Bit()
+        self.bit6  = Bit()
+        self.bit7  = Bit()
+        self.bit8  = Bit()
+        self.bit9  = Bit()
+        self.bit10 = Bit()
+        self.bit11 = Bit()
+        self.bit12 = Bit()
+        self.bit13 = Bit()
+        self.bit14 = Bit()
+        self.bit15 = Bit()
+    
+    def eval(self, inp, load):
+        out0  = self.bit0.eval(inp[15], load)
+        out1  = self.bit1.eval(inp[14], load)
+        out2  = self.bit2.eval(inp[13], load)
+        out3  = self.bit3.eval(inp[12], load)
+        out4  = self.bit4.eval(inp[11], load)
+        out5  = self.bit5.eval(inp[10], load)
+        out6  = self.bit6.eval(inp[9],  load)
+        out7  = self.bit7.eval(inp[8],  load)
+        out8  = self.bit8.eval(inp[7],  load)
+        out9  = self.bit9.eval(inp[6],  load)
+        out10 = self.bit10.eval(inp[5], load)
+        out11 = self.bit11.eval(inp[4], load)
+        out12 = self.bit12.eval(inp[3], load)
+        out13 = self.bit13.eval(inp[2], load)
+        out14 = self.bit14.eval(inp[1], load)
+        out15 = self.bit15.eval(inp[0], load)
+
+        return out15, out14, out13, out12, out11, out10, out9, out8, \
+               out7, out6, out5, out4, out3, out2, out1, out0
+        
+    def __str__(self):
+        return f'{self.bit15} {self.bit14} {self.bit13} {self.bit12} ' + \
+               f'{self.bit11} {self.bit10} {self.bit9} {self.bit8} ' + \
+               f'{self.bit7} {self.bit6} {self.bit5} {self.bit4} ' + \
+               f'{self.bit3} {self.bit2} {self.bit1} {self.bit0}'
+    
+    def __repr__(self):
+        return str(self)
+
+
+class RAM8:
+    def __init__(self):
+        self.r0 = Register()
+        self.r1 = Register()
+        self.r2 = Register()
+        self.r3 = Register()
+        self.r4 = Register()
+        self.r5 = Register()
+        self.r6 = Register()
+        self.r7 = Register()
+
+    def eval(self, inp, load, addr):
+        ld0, ld1, ld2, ld3, ld4, ld5, ld6, ld7 = DMux8Way(load, sel=addr)
+
+        out0 = self.r0.eval(inp, ld0)
+        out1 = self.r1.eval(inp, ld1)
+        out2 = self.r2.eval(inp, ld2)
+        out3 = self.r3.eval(inp, ld3)
+        out4 = self.r4.eval(inp, ld4)
+        out5 = self.r5.eval(inp, ld5)
+        out6 = self.r6.eval(inp, ld6)
+        out7 = self.r7.eval(inp, ld7)
+
+        return Mux8Way16(out0, out1, out2, out3, out4, out5, out6, out7, sel=addr)
+    
+    def __str__(self):
+        return f'r0: {self.r0}\nr1: {self.r1}\nr2: {self.r2}\nr3: {self.r3}\n' + \
+               f'r4: {self.r4}\nr5: {self.r5}\nr6: {self.r6}\nr7: {self.r7}'
+
+    def __repr__(self):
+        return str(self)
+        
