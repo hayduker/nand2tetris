@@ -410,9 +410,148 @@ class RAM8:
         return Mux8Way16(out0, out1, out2, out3, out4, out5, out6, out7, sel=addr)
     
     def __str__(self):
-        return f'r0: {self.r0}\nr1: {self.r1}\nr2: {self.r2}\nr3: {self.r3}\n' + \
-               f'r4: {self.r4}\nr5: {self.r5}\nr6: {self.r6}\nr7: {self.r7}'
+        return f'{self.r0}\n{self.r1}\n{self.r2}\n{self.r3}\n' + \
+               f'{self.r4}\n{self.r5}\n{self.r6}\n{self.r7}'
 
     def __repr__(self):
         return str(self)
-        
+
+
+class RAM64:
+    def __init__(self):
+        self.r0 = RAM8()
+        self.r1 = RAM8()
+        self.r2 = RAM8()
+        self.r3 = RAM8()
+        self.r4 = RAM8()
+        self.r5 = RAM8()
+        self.r6 = RAM8()
+        self.r7 = RAM8()
+    
+    def eval(self, inp, load, addr):
+        msb_addr = (addr[0], addr[1], addr[2])
+        lsb_addr = (addr[3], addr[4], addr[5])
+
+        ld0, ld1, ld2, ld3, ld4, ld5, ld6, ld7 = DMux8Way(load, sel=msb_addr)
+
+        out0 = self.r0.eval(inp, ld0, lsb_addr)
+        out1 = self.r1.eval(inp, ld1, lsb_addr)
+        out2 = self.r2.eval(inp, ld2, lsb_addr)
+        out3 = self.r3.eval(inp, ld3, lsb_addr)
+        out4 = self.r4.eval(inp, ld4, lsb_addr)
+        out5 = self.r5.eval(inp, ld5, lsb_addr)
+        out6 = self.r6.eval(inp, ld6, lsb_addr)
+        out7 = self.r7.eval(inp, ld7, lsb_addr)
+
+        return Mux8Way16(out0, out1, out2, out3, out4, out5, out6, out7, sel=msb_addr)
+
+    def __str__(self):
+        return f'{self.r0}\n{self.r1}\n{self.r2}\n{self.r3}\n' + \
+               f'{self.r4}\n{self.r5}\n{self.r6}\n{self.r7}'
+
+    def __repr__(self):
+        return str(self)
+
+
+class RAM512:
+    def __init__(self):
+        self.r0 = RAM64()
+        self.r1 = RAM64()
+        self.r2 = RAM64()
+        self.r3 = RAM64()
+        self.r4 = RAM64()
+        self.r5 = RAM64()
+        self.r6 = RAM64()
+        self.r7 = RAM64()
+    
+    def eval(self, inp, load, addr):
+        msb_addr = (addr[0], addr[1], addr[2])
+        lsb_addr = (addr[3], addr[4], addr[5], addr[6], addr[7], addr[8])
+
+        ld0, ld1, ld2, ld3, ld4, ld5, ld6, ld7 = DMux8Way(load, sel=msb_addr)
+
+        out0 = self.r0.eval(inp, ld0, lsb_addr)
+        out1 = self.r1.eval(inp, ld1, lsb_addr)
+        out2 = self.r2.eval(inp, ld2, lsb_addr)
+        out3 = self.r3.eval(inp, ld3, lsb_addr)
+        out4 = self.r4.eval(inp, ld4, lsb_addr)
+        out5 = self.r5.eval(inp, ld5, lsb_addr)
+        out6 = self.r6.eval(inp, ld6, lsb_addr)
+        out7 = self.r7.eval(inp, ld7, lsb_addr)
+
+        return Mux8Way16(out0, out1, out2, out3, out4, out5, out6, out7, sel=msb_addr)
+
+    def __str__(self):
+        return f'{self.r0}\n{self.r1}\n{self.r2}\n{self.r3}\n' + \
+               f'{self.r4}\n{self.r5}\n{self.r6}\n{self.r7}'
+
+    def __repr__(self):
+        return str(self)
+
+
+class RAM4K:
+    def __init__(self):
+        self.r0 = RAM512()
+        self.r1 = RAM512()
+        self.r2 = RAM512()
+        self.r3 = RAM512()
+        self.r4 = RAM512()
+        self.r5 = RAM512()
+        self.r6 = RAM512()
+        self.r7 = RAM512()
+    
+    def eval(self, inp, load, addr):
+        msb_addr = (addr[0], addr[1], addr[2])
+        lsb_addr = (addr[3], addr[4], addr[5],
+                    addr[6], addr[7], addr[8],
+                    addr[9], addr[10], addr[11])
+
+        ld0, ld1, ld2, ld3, ld4, ld5, ld6, ld7 = DMux8Way(load, sel=msb_addr)
+
+        out0 = self.r0.eval(inp, ld0, lsb_addr)
+        out1 = self.r1.eval(inp, ld1, lsb_addr)
+        out2 = self.r2.eval(inp, ld2, lsb_addr)
+        out3 = self.r3.eval(inp, ld3, lsb_addr)
+        out4 = self.r4.eval(inp, ld4, lsb_addr)
+        out5 = self.r5.eval(inp, ld5, lsb_addr)
+        out6 = self.r6.eval(inp, ld6, lsb_addr)
+        out7 = self.r7.eval(inp, ld7, lsb_addr)
+
+        return Mux8Way16(out0, out1, out2, out3, out4, out5, out6, out7, sel=msb_addr)
+
+    def __str__(self):
+        return f'{self.r0}\n{self.r1}\n{self.r2}\n{self.r3}\n' + \
+               f'{self.r4}\n{self.r5}\n{self.r6}\n{self.r7}'
+
+    def __repr__(self):
+        return str(self)
+
+
+class RAM16K:
+    def __init__(self):
+        self.r0 = RAM4K()
+        self.r1 = RAM4K()
+        self.r2 = RAM4K()
+        self.r3 = RAM4K()
+    
+    def eval(self, inp, load, addr):
+        msb_addr = (addr[0], addr[1])
+        lsb_addr = (addr[2], addr[3], addr[4],
+                    addr[5], addr[6], addr[7],
+                    addr[8], addr[9], addr[10],
+                    addr[11], addr[12], addr[13])
+
+        ld0, ld1, ld2, ld3 = DMux4Way(load, sel=msb_addr)
+
+        out0 = self.r0.eval(inp, ld0, lsb_addr)
+        out1 = self.r1.eval(inp, ld1, lsb_addr)
+        out2 = self.r2.eval(inp, ld2, lsb_addr)
+        out3 = self.r3.eval(inp, ld3, lsb_addr)
+
+        return Mux4Way16(out0, out1, out2, out3, sel=msb_addr)
+
+    def __str__(self):
+        return f'{self.r0}\n{self.r1}\n{self.r2}\n{self.r3}'
+
+    def __repr__(self):
+        return str(self)
