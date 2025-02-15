@@ -242,7 +242,6 @@ def Add16(a, b):
            sm7,  sm6,  sm5,  sm4,  sm3,  sm2,  sm1, sm0
 
 def Inc16(inp):
-    # TODO: This is what you're not supposed to do
     return Add16(inp,
                  (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1))
 
@@ -265,7 +264,7 @@ def ALU(x, y, zx, nx, zy, ny, f, no):
 
     zr = Not(Or(Or8Way((out[15], out[14], out[13], out[12],
                         out[11], out[10], out[9], out[8])),
-                Or8Way((out[7],  out[6],  out[5],  out[4],
+                Or8Way((out[7],  out[6],  out[5], out[4],
                         out[3],  out[2],  out[1], out[0]))))
     
     ng = out[0]
@@ -321,11 +320,12 @@ class Bit:
         self.dff = DFF()
     
     def eval(self, inp, load):
-        # Not sure how else to implement hardware feedback in code
-        # This is sort of cheating, because we look at the output
-        # of the DFF before running eval() on it.
         which = Mux(self.dff.q, inp, load)
         return self.dff.eval(which)
+
+    @property
+    def val(self):
+        return self.dff.q
 
     def __str__(self):
         return str(self.dff.q)
@@ -373,6 +373,13 @@ class Register:
 
         return out15, out14, out13, out12, out11, out10, out9, out8, \
                out7, out6, out5, out4, out3, out2, out1, out0
+    
+    @property
+    def val(self):        
+        return (self.bit15.val, self.bit14.val, self.bit13.val, self.bit12.val,
+                self.bit11.val, self.bit10.val, self.bit9.val, self.bit8.val,
+                self.bit7.val,  self.bit6.val,  self.bit5.val,  self.bit4.val,
+                self.bit3.val,  self.bit2.val,  self.bit1.val,  self.bit0.val)
         
     def __str__(self):
         return f'{self.bit15} {self.bit14} {self.bit13} {self.bit12} ' + \
@@ -555,3 +562,63 @@ class RAM16K:
 
     def __repr__(self):
         return str(self)
+
+
+class PC:
+    def __init__(self):
+        self.reg = Register()
+
+    def eval(self, inp, load, inc, reset):
+        # For simplicity in the implementation, we use an 8-way Mux to
+        # select between the four possible inputs to this gate. The four
+        # inputs include the cases where reset, inc, and load are all 0
+        # or one of them is 1. Supplying multiple high values will result
+        # in the first high most-significant bit being selected. These
+        # inputs can be summarized as follows:
+        # 
+        # sel = (reset, inc, load)
+        #
+        # where
+        #
+        # reset | inc | load | output
+        # 0     | 0   | 0    | curr_val
+        # 0     | 0   | 1    | inp
+        # 0     | 1   | 0    | curr_val + 1
+        # 0     | 1   | 1    | inp
+        # 1     | 0   | 0    | 0
+        # 1     | 0   | 1    | 0
+        # 1     | 1   | 0    | 0
+        # 1     | 1   | 1    | 0
+        #
+
+        false = (0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0)
+        curr_val = self.reg.val
+        next_val = Inc16(curr_val)
+
+        sel = (reset, inc, load)
+
+        muxout = Mux8Way16(a=curr_val, b=inp, c=next_val, d=inp,
+                           e=false, f=false, g=false, h=false,
+                           sel=sel)
+        
+        regout = self.reg.eval(inp=muxout, load=1)
+
+        return self
+    
+    @property
+    def val(self):
+        return self.reg.val
+
+    def __str__(self):
+        return str(self.reg)
+    
+    def __repr__(self):
+        return str(self)
+
+
+
+##########################################################
+# Now we build the computer architecture from the ALU,
+# RAM, and other components we have built so far.
+##########################################################
+
