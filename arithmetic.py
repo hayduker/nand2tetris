@@ -1,4 +1,4 @@
-from gates import *
+from logic import *
 
 
 def HalfAdder(a, b):

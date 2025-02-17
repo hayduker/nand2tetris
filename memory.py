@@ -1,4 +1,4 @@
-from gates import *
+from logic import *
 from arithmetic import Inc16
 
 
