@@ -190,3 +190,7 @@ class HackAssembler:
                 else: # L-instructions were processed in the first pass
                     continue
                 
+
+if __name__ == '__main__':
+    assembler = HackAssembler()
+    assembler.translate('testfiles/Test.asm')
