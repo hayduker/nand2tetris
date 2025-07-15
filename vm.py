@@ -57,7 +57,7 @@ class Parser:
             )
 
 
-segment2name = {
+segment2symbol = {
     'local': 'LCL',
     'argument': 'ARG',
     'this': 'THIS',
@@ -78,14 +78,49 @@ class CodeWriter:
             self.file.close()
 
     def write_arithmetic(self, command: str) -> None:
-        pass
+        if command == 'add':
+            ## Pop first to R13
+            # SP--
+            self._write(f'@SP')
+            self._write(f'M=M-1')
+            # D = RAM[SP]
+            self._write(f'@SP')
+            self._write(f'A=M')
+            self._write(f'D=M')
+            # R13 = D
+            self._write(f'@R13')
+            self._write(f'M=D')
+
+            ## Pop second to D
+            # SP--
+            self._write(f'@SP')
+            self._write(f'M=M-1')
+            # D = RAM[SP]
+            self._write(f'@SP')
+            self._write(f'A=M')
+            self._write(f'D=M')
+            
+            ## D += R13
+            self._write(f'@R13')
+            self._write(f'D=D+M')
+
+            ## Push D to stack
+            # RAM[SP] = D
+            self._write(f'@SP')
+            self._write(f'A=M')
+            self._write(f'M=D')
+            # SP++
+            self._write(f'@SP')
+            self._write(f'M=M+1')
+
+
 
     def write_push_pop(self, command, segment: str, index: int) -> None:
-        name = segment2name[segment]
+        symbol = segment2symbol[segment]
 
         if command == CommandType.PUSH:
             # D = segment[index]
-            self._write(f'@{name}')
+            self._write(f'@{symbol}')
             self._write(f'D=A')
             self._write(f'@{index}')
             self._write(f'A=D+A')
@@ -100,24 +135,23 @@ class CodeWriter:
 
         elif command == CommandType.POP:
             # R13 = segment + index
-            self._write(f'@{name}')
+            self._write(f'@{symbol}')
             self._write(f'D=A')
             self._write(f'@{index}')
             self._write(f'D=D+A')
             self._write(f'@R13')
             self._write(f'M=D')
-            # Decrement stack pointer and go to it
+            # SP--
             self._write(f'@SP')
-            self._write(f'AM=M-1')
+            self._write(f'M=M-1')
             # D = RAM[SP]
             # self._write(f'@SP')
-            # self._write(f'A=M')
+            self._write(f'A=M')
             self._write(f'D=M')
             # segment[index] = value @R13
             self._write(f'@R13')
             self._write(f'A=M')
-            self._write(f'M=D')            
-
+            self._write(f'M=D')
 
     def _write(self, text: str) -> None:
         self.file.write(text + '\n')
@@ -133,7 +167,16 @@ class VMTranslator:
                 print(f'Parsed {cmd.type} command with args: {(cmd.arg1, cmd.arg2)}')
 
                 if cmd.type in [CommandType.PUSH, CommandType.POP]:
-                    writer.write_push_pop(command=cmd.type, segment=cmd.arg1, index=cmd.arg2)
+                    writer.write_push_pop(
+                        command=cmd.type,
+                        segment=cmd.arg1,
+                        index=cmd.arg    
+                    )
+
+                elif cmd.type == CommandType.ARITHMETIC:
+                    writer.write_arithmetic(
+                        command=cmd.arg1
+                    )
 
 
 if __name__ == '__main__':
